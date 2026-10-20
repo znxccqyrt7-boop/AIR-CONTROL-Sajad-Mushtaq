@@ -1,167 +1,167 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AIR CONTROL | Sajad Mushtaq</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#07101f;color:#eef6ff;font-family:system-ui,Tahoma,sans-serif}
-header{padding:20px;text-align:center;background:linear-gradient(135deg,#102d50,#07101f)}
-h1{margin:0;letter-spacing:3px;color:#57e4ff}
-small{color:#a6b9d2}
-.wrap{max-width:850px;margin:auto;padding:16px}
-.stage{position:relative;background:#000;border:1px solid #236181;border-radius:20px;overflow:hidden;aspect-ratio:4/3;max-height:55vh}
-video,canvas{position:absolute;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-canvas{pointer-events:none}
-.status{padding:12px;text-align:center;color:#79e7f8}
-.panel{background:#12243d;border:1px solid #284a69;border-radius:18px;padding:20px;min-height:160px;text-align:center}
-button{background:#17b9db;color:#04101b;border:0;border-radius:12px;padding:13px 18px;font-weight:800;margin:5px;cursor:pointer}
-button:disabled{opacity:.4}
-.muted{color:#aac1d7;font-size:14px}
-#slide{font-size:clamp(22px,6vw,40px);font-weight:900;margin:18px 0}
-#counter{color:#5be6ff}
-.controls{text-align:center;margin-top:12px}
-footer{text-align:center;padding:24px;color:#9ab1c9}
-#dot{display:inline-block;width:9px;height:9px;background:#777;border-radius:50%;margin-left:7px}
-.on #dot{background:#2de69c}
-#hint{color:#ffe08b}
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+header{text-align:center;padding:24px;background:#102744}
+h1{color:#53e5ff;letter-spacing:3px}
+main{max-width:850px;margin:auto;padding:16px}
+video{width:100%;max-height:350px;background:#000;border:2px solid #245578;border-radius:16px;object-fit:cover;transform:scaleX(-1)}
+.panel{background:#112944;padding:22px;border-radius:18px;text-align:center;margin-top:15px}
+button{border:0;border-radius:10px;padding:13px 18px;margin:5px;background:#53e5ff;color:#07111f;font-weight:bold;font-size:16px}
+button:disabled{opacity:.5}
+#status{padding:14px;text-align:center;color:#53e5ff}
+#slide{font-size:28px;font-weight:bold;margin:22px 0}
+small{color:#c0d6ea}
 </style>
 </head>
 <body>
 <header>
 <h1>AIR CONTROL</h1>
-<small>التحكم بالعروض بحركات اليد — Developed by Eng. Sajad Mushtaq</small>
+<p>تحكم بالإيماءات بدون لمس</p>
+<small>Developed by Eng. Sajad Mushtaq</small>
 </header>
-<main class="wrap">
-<div class="stage">
-<video id="video" autoplay muted playsinline></video>
-<canvas id="overlay"></canvas>
-</div>
-<div class="status" id="status">
-<span id="dot"></span><span id="message">اضغط تشغيل الكاميرا حتى تبدأ</span>
-</div>
-<div class="controls">
+<main>
+<video id="camera" autoplay muted playsinline></video>
+<div id="status">اضغط تشغيل الكاميرا للبدء.</div>
+<div style="text-align:center">
 <button id="start">تشغيل الكاميرا</button>
-<button id="stop" disabled>إيقاف</button>
+<button id="stop" disabled>إيقاف الكاميرا</button>
 </div>
 <section class="panel">
-<div id="counter">1 / 5</div>
+<small id="number">الشريحة 1 من 4</small>
 <div id="slide">أهلاً بكم في AIR CONTROL</div>
-<div class="muted" id="desc">حرّك العرض بيدك، بدون لمس الشاشة.</div>
-<p id="hint">✋ كف مفتوح: التالي | ✊ قبضة: السابق. أبعد يدك بين الحركات.</p>
-</section>
-<div class="controls">
+<p id="description">تحكم بالعرض باستخدام حركات اليد.</p>
 <button id="prev">السابق</button>
 <button id="next">التالي</button>
-</div>
-<p class="muted">يتطلب Safari حديثاً، اتصال إنترنت لتحميل نموذج التعرّف، وفتح الصفحة عبر HTTPS. معالجة الكاميرا تتم داخل المتصفح ولا تُرسل صورها إلى خادم من هذا الكود.</p>
+</section>
+<section class="panel">
+<h3>طريقة التحكم</h3>
+<p>✋ الكف المفتوح: الشريحة التالية.</p>
+<p>✊ القبضة: الشريحة السابقة.</p>
+<p>📱 أزرار السابق والتالي تعمل باللمس دائماً.</p>
+</section>
+<p><small>يحتاج اتصال إنترنت لتحميل نموذج التعرّف، وإذن الكاميرا. افتح الصفحة عبر HTTPS.</small></p>
 </main>
-<footer>© 2026 AIR CONTROL</footer>
 <script type="module">
-import {HandLandmarker,FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm';
-const $=id=>document.getElementById(id),v=$('video'),canvas=$('overlay'),ctx=canvas.getContext('2d');
-let detector,stream,running=false,raf=0,lastVideoTime=-1,armed=true,gesture='',stable=0,lastAction=0,index=0;
+const camera=document.getElementById('camera');
+const status=document.getElementById('status');
+const start=document.getElementById('start');
+const stop=document.getElementById('stop');
+
 const slides=[
-['أهلاً بكم في AIR CONTROL','تحكم بالعرض بحركة اليد فقط.'],
-['الرؤية الحاسوبية','الكاميرا تكتشف نقاط مفاصل اليد محلياً.'],
-['كف مفتوح ✋','اثبت الكف المفتوح للحظة للانتقال للشريحة التالية.'],
-['قبضة ✊','اثبت القبضة للحظة للعودة للشريحة السابقة.'],
+['أهلاً بكم في AIR CONTROL','تحكم بالعرض باستخدام حركات اليد.'],
+['الرؤية الحاسوبية','الكاميرا تحلل نقاط اليد حتى تتعرف على الإيماءات.'],
+['التحكم الذكي','الكف المفتوح للتالي والقبضة للسابق.'],
 ['شكراً لحضوركم','المطور والمؤسس: المهندس سجاد مشتاق.']
 ];
+
+let index=0,stream=null,detector=null,running=false;
+let lastVideoTime=-1,lastGesture='',stable=0,lastAction=0;
+
 function render(){
-$('counter').textContent=`${index+1} / ${slides.length}`;
-$('slide').textContent=slides[index][0];
-$('desc').textContent=slides[index][1]
+document.getElementById('number').textContent=
+`الشريحة ${index+1} من ${slides.length}`;
+document.getElementById('slide').textContent=slides[index][0];
+document.getElementById('description').textContent=slides[index][1];
 }
-function change(n){index=Math.max(0,Math.min(slides.length-1,index+n));render()}
-$('next').onclick=()=>change(1);
-$('prev').onclick=()=>change(-1);
-function msg(t){$('message').textContent=t}
-function classify(p){
-let tips=[8,12,16,20],pips=[6,10,14,18];
-let open=tips.filter((tip,i)=>p[tip].y<p[pips[i]].y-0.035).length;
-return open>=4?'open':open===0?'fist':'other'
+function change(n){
+index=Math.max(0,Math.min(slides.length-1,index+n));
+render();
 }
-function draw(p){
-canvas.width=v.videoWidth;canvas.height=v.videoHeight;
-ctx.clearRect(0,0,canvas.width,canvas.height);
-if(!p)return;
-ctx.fillStyle='#50e8ff';
-for(let a of p){
-ctx.beginPath();
-ctx.arc(a.x*canvas.width,a.y*canvas.height,4,0,Math.PI*2);
-ctx.fill()
-}
-}
+document.getElementById('next').onclick=()=>change(1);
+document.getElementById('prev').onclick=()=>change(-1);
+
 async function loop(){
 if(!running)return;
 try{
-if(v.readyState>=2&&v.currentTime!==lastVideoTime){
-lastVideoTime=v.currentTime;
-let result=detector.detectForVideo(v,performance.now()),p=result.landmarks?.[0];
-draw(p);
-let g=p?classify(p):'none';
-if(g===gesture)stable++;else{gesture=g;stable=1}
-if(g==='none'||g==='other'){
-if(stable>=8)armed=true;
-msg('✋ كف مفتوح للتالي | ✊ قبضة للسابق')
-}else{
-msg(g==='open'?'تم رصد كف مفتوح':'تم رصد قبضة');
-if(armed&&stable>=9&&performance.now()-lastAction>1400){
-change(g==='open'?1:-1);
-armed=false;
+if(camera.readyState>=2&&camera.currentTime!==lastVideoTime){
+lastVideoTime=camera.currentTime;
+const result=detector.detectForVideo(camera,performance.now());
+const p=result.landmarks?.[0];
+if(p){
+const openTips=[[8,6],[12,10],[16,14],[20,18]];
+const openCount=openTips.filter(([tip,mid])=>
+p[tip].y<p[mid].y-0.035).length;
+let gesture=openCount>=4?'open':openCount===0?'fist':'other';
+stable=gesture===lastGesture?stable+1:1;
+lastGesture=gesture;
+if(gesture==='other'){
+status.textContent='تم رصد اليد؛ افتح كفك أو سوّي قبضة.';
+}else if(stable>=10&&performance.now()-lastAction>1600){
+change(gesture==='open'?1:-1);
 lastAction=performance.now();
-msg('تم تنفيذ الحركة؛ أبعد إيدك حتى تعيدها')
+stable=0;
+status.textContent=gesture==='open'?'تم الانتقال للتالي.':'تم الرجوع للسابق.';
+}else{
+status.textContent=gesture==='open'?'تم رصد كف مفتوح.':'تم رصد قبضة.';
+}
+}else{
+lastGesture='';stable=0;
+status.textContent='قرّب يدك أمام الكاميرا.';
 }
 }
+}catch(e){
+status.textContent='خطأ بالتعرّف على اليد: '+e.message;
 }
-}catch(e){msg('تعذر تحليل الصورة: '+e.message)}
-raf=requestAnimationFrame(loop)
+requestAnimationFrame(loop);
 }
-$('start').onclick=async()=>{
-if(running)return;
-$('start').disabled=true;
-msg('جاري تهيئة الكاميرا والنموذج...');
+
+start.onclick=async()=>{
+start.disabled=true;
+status.textContent='جاري تشغيل الكاميرا...';
 try{
-if(!navigator.mediaDevices?.getUserMedia)throw Error('المتصفح أو الاتصال لا يدعم تشغيل الكاميرا');
-const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-detector=await HandLandmarker.createFromOptions(vision,{
+/* نشغل الكاميرا أولاً حتى يظهر طلب الإذن */
+stream=await navigator.mediaDevices.getUserMedia({
+audio:false,
+video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}
+});
+camera.srcObject=stream;
+await camera.play();
+status.textContent='الكاميرا اشتغلت. جاري تحميل التعرّف على اليد...';
+
+/* بعدها نحمل نموذج التعرف */
+const vision=await import(
+'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm'
+);
+const files=await vision.FilesetResolver.forVisionTasks(
+'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm'
+);
+detector=await vision.HandLandmarker.createFromOptions(files,{
 baseOptions:{
 modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
 delegate:'CPU'
 },
-runningMode:'VIDEO',numHands:1
+runningMode:'VIDEO',
+numHands:1
 });
-stream=await navigator.mediaDevices.getUserMedia({
-audio:false,video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}
-});
-v.srcObject=stream;
-await v.play();
 running=true;
-$('status').classList.add('on');
-$('stop').disabled=false;
-msg('جاهز! ورّيني كفك أو قبضتك');
-loop()
+stop.disabled=false;
+status.textContent='جاهز! ورّيني كفك أمام الكاميرا.';
+loop();
 }catch(e){
-msg('ما اشتغل: '+e.message);
-$('start').disabled=false;
-stream?.getTracks().forEach(t=>t.stop())
+status.textContent='تعذر التشغيل: '+e.message+
+' — تأكد من HTTPS والإنترنت وإذن الكاميرا.';
+stream?.getTracks().forEach(t=>t.stop());
+camera.srcObject=null;
+start.disabled=false;
 }
 };
-$('stop').onclick=()=>{
+
+stop.onclick=()=>{
 running=false;
-cancelAnimationFrame(raf);
 stream?.getTracks().forEach(t=>t.stop());
-v.srcObject=null;
-ctx.clearRect(0,0,canvas.width,canvas.height);
-$('status').classList.remove('on');
-$('start').disabled=false;
-$('stop').disabled=true;
-armed=true;gesture='';stable=0;
-msg('تم إيقاف الكاميرا')
+camera.srcObject=null;
+stop.disabled=true;
+start.disabled=false;
+status.textContent='تم إيقاف الكاميرا.';
 };
+
 render();
 </script>
 </body>
